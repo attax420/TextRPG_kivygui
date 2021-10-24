@@ -193,15 +193,6 @@ class Player(Character, GameMap):
     def showxp(self):
         return self.xp, self.lvl
 
-    def pickup_item(self):
-        pass
-
-    def equip_item(self):
-        pass
-
-    def use_world(self):
-        pass
-
     def use_item(self, item):
         if not item.interactive:
                 return False, 'not usable'

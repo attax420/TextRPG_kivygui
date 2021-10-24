@@ -1,8 +1,8 @@
 from classes import *
 
 if __name__ == '__main__':
-    debug = True
-    cheatmode = True
+    debug = False
+    cheatmode = False
     p.randomize_map()
     p.position_update()
     p.print_map()

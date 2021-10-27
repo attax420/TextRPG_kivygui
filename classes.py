@@ -1,5 +1,4 @@
 from random import choice 
-from termcolor import colored
 from time import sleep
 import os
 from platform import system
@@ -11,10 +10,11 @@ if system().lower() == 'linux':
 
 # ######### MAP ######### #
 class GameMap:
-    def __init__(self):        
+    def __init__(self): 
+        self.map_string = ''       
         self.map = []
-        self.map_x = 15
-        self.map_y = 15
+        self.map_x = 10
+        self.map_y = 30
         self.player_pos_x = int(choice(range(self.map_x -1)))
         self.player_pos_y = int(choice(range(self.map_y -1)))        
         self.boss_x = int(choice(range(self.map_x -1)))
@@ -28,87 +28,96 @@ class GameMap:
         run = True        
         while run == True:
             if self.boss_x != self.player_pos_x or self.boss_y != self.player_pos_y:                
-                       self.map[self.player_pos_y][self.player_pos_x] = colored(' ', 'green', 'on_white')
+                       self.map[self.player_pos_y][self.player_pos_x] = ('#')
                        run = False
             else:
                 self.player_pos_x = int(choice(range(self.map_x -1)))
                 self.player_pos_y = int(choice(range(self.map_y -1)))  
                 continue
     
-    def print_map(self):
+    def map_to_string(self):
+        self.map_string = ''
         for i in range(self.map_y):
+            self.map_string +='|'
             for j in range(self.map_x):
-                print(self.map[i][j], ' | ', end=' ')
-            print()
-        print()
+                map_string_value = str(self.map[i][j])
+                self.map_string += map_string_value + ' | '                
+            self.map_string += '\n'      
 
+    def print_map(self):
+        self.map_to_string()
+        print(self.map_string)
+    
     def randomize_map(self):
         for i in range(self.map_y):
             for j in range(self.map_x):
-                if self.map[j][i] == -1:
-                    self.map[j][i] = choice([' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
-                                             colored('E', 'green'), colored('E', 'yellow'), colored('E', 'red'), colored('+', 'red'), colored('e', 'yellow')])
-        self.map[self.boss_y][self.boss_x] = colored('B', 'magenta')
+                if self.map[i][j] == -1:
+                    self.map[i][j] = choice([' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ','+','+',
+                                             'G', 'O', 'o', 'T', 'D'])
+        self.map[self.boss_y][self.boss_x] = ('B')
         
         
 
     def check_field(self):
-        if self.map[self.player_pos_y][self.player_pos_x] == colored('X', 'blue'):
+        if self.map[self.player_pos_y][self.player_pos_x] == 'X':
             return 'visited'
 
-        if self.map[self.player_pos_y][self.player_pos_x] == colored('+', 'red'):
+        if self.map[self.player_pos_y][self.player_pos_x] == '+':
             return 'heal'
 
         if self.map[self.player_pos_y][self.player_pos_x] == ' ':
             return 'empty'
 
-        if self.map[self.player_pos_y][self.player_pos_x] == colored('E', 'green'):
+        if self.map[self.player_pos_y][self.player_pos_x] == 'G':
             return 'goblin'
 
-        if self.map[self.player_pos_y][self.player_pos_x] == colored('e', 'yellow'):
+        if self.map[self.player_pos_y][self.player_pos_x] == 'D':
             return 'dwarf'
 
-        if self.map[self.player_pos_y][self.player_pos_x] == colored('E', 'yellow'):
+        if self.map[self.player_pos_y][self.player_pos_x] == 'T':
             return 'troll'
 
-        if self.map[self.player_pos_y][self.player_pos_x] == colored('E', 'red'):
+        if self.map[self.player_pos_y][self.player_pos_x] == 'o':
             return 'ork'
 
-        if self.map[self.player_pos_y][self.player_pos_x] == colored('B', 'magenta'):
+        if self.map[self.player_pos_y][self.player_pos_x] == 'O':
+            return 'ork_general'
+
+        if self.map[self.player_pos_y][self.player_pos_x] == 'B':
             return 'dragon'
 
     def move_north(self):
         if self.player_pos_y != 0:
-            self.map[int(self.player_pos_y)][int(self.player_pos_x)] = colored('X', 'blue')
+            self.map[int(self.player_pos_y)][int(self.player_pos_x)] = 'X'
             self.player_pos_y -= 1
-            return True
+            return 'You walked north!\n', True
         else:
-            return False
+            return 'There is a thick jungle full of dangerous animals. Walking through there would certainly kill you!\n', False
 
 
     def move_south(self):
         if self.player_pos_y != self.map_y-1:
-            self.map[int(self.player_pos_y)][int(self.player_pos_x)] = colored('X', 'blue')
+            self.map[int(self.player_pos_y)][int(self.player_pos_x)] = 'X'
             self.player_pos_y += 1
-            return True
+            return 'You walked south!\n', True
         else:
-            return False
+            return 'There are huge Mountains that you cannot pass!\n', False
 
     def move_west(self):
         if self.player_pos_x != 0:
-            self.map[int(self.player_pos_y)][int(self.player_pos_x)] = colored('X', 'blue')
+            self.map[int(self.player_pos_y)][int(self.player_pos_x)] = 'X'
             self.player_pos_x -= 1
-            return True
+            return 'You walked west!\n', True
         else:
-            return False
+            return 'You see a big ocean. There is certainly no way past this!\n', False
 
     def move_east(self):
-        if self.player_pos_x != self.map_y-1:
-            self.map[int(self.player_pos_y)][int(self.player_pos_x)] = colored('X', 'blue')
+        if self.player_pos_x != self.map_x-1:
+            self.map[int(self.player_pos_y)][int(self.player_pos_x)] = 'X'
             self.player_pos_x += 1
-            return True
+            return 'You walked east!\n', True
         else:
-            return False
+            return 'You see a huge cliff. Jumping of it is no option!\n', False
 # end MAP #
 
 enemies = ['Goblin','Troll','Ork','Dwarf']
@@ -156,7 +165,7 @@ class Player(Character, GameMap):
         self.hp = self.max_hp
         self.mp = self.max_mp
         self.xp = 0
-        self.spells = ['fireball']
+        self.spell = []
         self.inventory = []
         self.weapon = None
         self.gear = {'Head': 'none',
@@ -175,6 +184,10 @@ class Player(Character, GameMap):
             self.dmg_bonus = item.dmg_bonus
             self.update_dmg()
             return True
+        elif item in spelllist and item in self.inventory and self.spell == None:
+            self.spell = item
+            self.inventory.remove(item)
+            return True
         return False
 
     def unequip(self, item):
@@ -187,11 +200,8 @@ class Player(Character, GameMap):
         else:
             return False
 
-    def showspells(self):
-        return self.spells
 
-    def showxp(self):
-        return self.xp, self.lvl
+
 
     def use_item(self, item):
         if not item.interactive:
@@ -393,9 +403,9 @@ class EnemyDragon(Enemy):
         self.xp_bonus = 800
         self.name = 'Dragon'
         self.hp = 2000
-        self.inventory = [sword_diamond, manapotion, manapotion, healthpotion]
+        self.inventory = [sword_diamond, manapotion, manapotion, healthpotion, spellfireball]
         self.attack_damage = 30
-        self.spells = ['fireball']
+        self.spell = [spellfireball]
    
 
 # end CHARACTERS #
@@ -522,6 +532,7 @@ class SpellBlizzard(Spell):
 
 # ######### Objects ######### #
 p = Player()
+e = Enemy()
 healthpotion = PotionHP()
 manapotion = PotionMP()
 xppotion = PotionXP()
@@ -537,3 +548,5 @@ potionlist = [healthpotion, manapotion, xppotion]
 spelllist = [spellfireball, spellblizzard]
 # end ITEMLISTS + SPELLLIST #
 # end OBJECTS #
+
+p.spell.append(spellfireball)

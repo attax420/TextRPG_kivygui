@@ -1,0 +1,157 @@
+MainWindow:
+
+<BackgroundColor@Widget>:
+    background_color: 1,1,1,1
+    canvas.before:
+        Color:
+            rgba: root.background_color
+        Rectangle:
+            size: self.size
+            pos: self.pos
+
+<BackgroundLabel@Label+BackgroundColor>:
+    background_color: 0, 0, 0, 0 
+            
+<MainWindow>:
+    orientation: "vertical"
+    BoxLayout:
+        orientation:"horizontal"
+
+       
+        Label:            
+            text: root.text_textfield
+            text_size: self.size
+            halign: "left"
+            valign: "top"
+            font_size: "10sp"
+            size_hint: .5, 1
+            
+        Label:       
+            text: root.text_map
+            text_size: self.size     
+            halign: "left"
+            valign: "top"
+            size_hint: 1, 1
+            font_name: "fonts/monospace.medium.ttf"
+        
+
+
+
+        BoxLayout:
+            orientation:"vertical"
+            size_hint: .5, 1
+            
+            Label:                      
+                text: root.text_stats
+                text_size: self.size
+                halign: "left"
+                valign: "top"
+                size_hint: 1, .3
+                font_size: "12sp"
+
+            ScrollView:
+                size_hint: 1, .7
+                scroll_distance: 100
+                 
+                Label:                      
+                    text: "Placeholder Inventory\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST"
+                    size_hint: None, None     
+                    size: self.texture_size
+                    font_size: "12sp"
+                    
+
+
+    BoxLayout:
+        orientation: "horizontal"
+        size: "60dp","60dp"        
+        size_hint: None,None
+
+        Label:
+            size: "60dp","60dp"        
+            size_hint: None,None
+        
+        Button:
+            text: "go\nnorth"
+            size: "60dp","60dp"        
+            size_hint: None,None
+            on_press: root.go_north()
+            disabled: not root.explore_buttons_active
+
+        Label:
+            size: "60dp","60dp"        
+            size_hint: None,None
+
+    BoxLayout:
+        orientation: "horizontal"
+        size: "180dp","60dp"
+            #pos: "0dp","60dp"
+        size_hint: None,None
+        Button:
+            text: "go\nwest"
+            size: "60dp","60dp"
+            #pos: "0dp","60dp"
+            size_hint: None,None
+            pos_hint: {"x":0}
+            on_press: root.go_west()
+            disabled: not root.explore_buttons_active
+        Button:
+            text: "go\nsouth"
+            size: "60dp","60dp"
+            size_hint: None,None
+            on_press: root.go_south()
+            disabled: not root.explore_buttons_active
+        Button:
+            text: "go\neast"
+            size: "60dp","60dp"
+            #pos: "0dp","60dp"
+            size_hint: None,None
+            on_press: root.go_east()
+            disabled: not root.explore_buttons_active
+        Label:
+            size: "60dp","60dp"        
+            size_hint: None,None
+
+        Button:
+            text: "use\nitem"
+            size: "60dp","60dp"        
+            size_hint: None,None
+
+        Button:
+            text: "equip\ngear"
+            size: "60dp","60dp"        
+            size_hint: None,None
+            disabled: not root.explore_buttons_active
+
+        Button:
+            text: "unequip\ngear"
+            size: "60dp","60dp"        
+            size_hint: None,None
+            disabled: not root.explore_buttons_active
+
+        Label:
+            size: "60dp","60dp"        
+            size_hint: None,None
+
+        Button:
+            text: "attack"
+            size: "60dp","60dp"        
+            size_hint: None,None
+            disabled: not root.fight_buttons_active
+            on_press: root.attack()
+        Button:
+            text: "defend"
+            size: "60dp","60dp"        
+            size_hint: None,None
+            disabled: not root.fight_buttons_active
+
+        Button:
+            text: 'cast\nspell'
+            size: "60dp","60dp"        
+            size_hint: None,None
+            disabled: not root.fight_buttons_active
+        
+        Button:
+            text: "run\naway"
+            size: "60dp","60dp"        
+            size_hint: None,None
+            disabled: not root.fight_buttons_active

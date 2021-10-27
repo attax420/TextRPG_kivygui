@@ -1,428 +1,204 @@
+from kivy.app import App
+from kivy.uix.button import Button
+from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.gridlayout import GridLayout
+from kivy.uix.widget import Widget
+from kivy.uix.scrollview import ScrollView
+from kivy.properties import StringProperty, BooleanProperty
 from classes import *
 
-if __name__ == '__main__':
-    debug = False
-    cheatmode = False
-    p.randomize_map()
-    p.position_update()
-    p.print_map()
-    if cheatmode:
-        p.attack_damage = 1000
-        p.hp = 999999
-        p.xp = 999999
-    p_effectcounter = 0
-    e_effectcounter = 0
+p.randomize_map()
+p.position_update()
+ 
 
-
-    # ######### PLAYER CONTROL FUNCTIONS ######### #
-    def p_showmp(p):
-        print(f'You have {str(p.mp)} MP left!')
-
-    def p_showxp(p):
-        xp, lvl = p.showxp()
-        print(f'You have {str(xp)} XP and are on LVL {str(lvl)}!')
-
-    def p_showhp(p):
-        print(f'You have {str(p.hp)} HP left!')
-
-    def e_showhp(e):
-        print(f'The  {e.name}  has {str(e.hp)} HP left!')
-
-    def show_inventory(p):
-        for i in p.inventory:
-            print(i.name)
-
-    def equip(p):
-        print('What do you want to equip?')
-        show_inventory(p)
-        try:
-            item_in = input('->')
-            if item_in == 'Diamond Sword':
-                item_out = sword_diamond
-            elif item_in == 'Steel Sword':
-                item_out = sword_steel
-            elif item_in == 'Bronze Sword':
-                item_out = sword_bronze      
-            else:
-                item_out = None
-                raise ValueError          
-            p.equip(item_out)
-            print(f'You equipped the {str(item_out.name)}!')
-            
-        except ValueError:
-            print('Enter an item from the list to equip!')
-
-    def unequip(p):
-        print('What do you want to unequip?')
-        print(p.weapon.name)
-        try:
-            item_in = input('->')
-            if item_in == 'Diamond Sword':
-                item_out = sword_diamond
-            elif item_in == 'Steel Sword':
-                item_out = sword_steel
-            elif item_in == 'Bronze Sword':
-                item_out = sword_bronze      
-            else:        
-                item_out = None
-                raise ValueError
-
-            p.unequip(item_out)
-            print(f'You unequipped the {str(item_out.name)}!')        
-
-        except ValueError:
-            print('Enter an item from the list to unequip!')
-
-    def use_healthpotion(p):   
-        exec, state = p.use_item(healthpotion)
-        if not exec and state == 'not usable':
-            print ('This item is not usable!')
-        if not exec and state == 'not available':
-            print ('You don\'t have this item!')
-        if exec:
-            print(f'You used a Health Potion and recieved {str(healthpotion.hp_bonus)} HP!')
-
-    def use_manapotion(p):
-        exec, state = p.use_item(manapotion)
-        if not exec and state == 'not usable':
-            print ('This item is not usable!')
-        if not exec and state == 'not available':
-            print ('You don\'t have this item!')
-        if exec:
-            print(f'You used a Mana Potion and recieved {str(manapotion.mp_bonus)} MP!')
-
-    def use_xppotion(p):    
-        exec, state = p.use_item(xppotion)
-        if not exec and state == 'not usable':
-            print ('This item is not usable!')
-        if not exec and state == 'not available':
-            print ('You don\'t have this item!')
-        if exec:
-            print(f'You used a XP Potion and recieved {str(xppotion.xp_bonus)} XP!')
-        print(p.lvl_up())
+class MainWindow(BoxLayout):        
+    p.map_to_string()
+    text_map = StringProperty(p.map_string)
+    text_textfield = StringProperty('')    
+    text_stats = StringProperty('')
+    explore_buttons_active = BooleanProperty(True)
+    fight_buttons_active = BooleanProperty(False)
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs) 
+        self.field = 'empty'
+        self.mode = 'explore'
+        self.map_y = p.map_y
+        self.map_x = p.map_x
+        self.textfield_counter = 0
+        self.update_stats()
+      
+    def update_stats(self):
+        text = str(f"STATS:\nHP: {p.hp}/{p.max_hp}\n"
+                           f"MP: {p.mp}/{p.max_mp}\n"
+                           f"DMG: {p.attack_damage}\n"
+                           f"XP: {p.xp}\n"
+                           f"LVL: {p.lvl}\n")
+        self.text_stats = text
         
-    def cast_spell(p, e): 
-        print('Which spell do you want to cast?')
-        print('Avalilable spells: ')
-        for i in p.spells:
-            print(i)
-        spell_select = input('->')
+    def update_map(self):
+        global e
 
-        while spell_select not in p.spells:        
-            print('You dont have this spell... Enter a spell that you actually have.\n Available spells:\n')
-            for i in p.spells:
-                print(i)
-            spell_select = input('->')
-            
-        if spell_select == 'fireball' and p.mp >= p.lvl*20/p.lvl:
-            spellfireball.cast(p, e)
-            print(f'You casted a fireball! It did {str(spellfireball.dmg)} DMG and the {e.name} is burning now!')        
+        self.update_stats()
+        self.textfield_counter += 1              
+        p.map_to_string()
+        self.field = p.check_field()
+        p.position_update()
+        self.text_map = p.map_string  
+
+        enemies = ('dwarf','goblin','ork','ork_general','troll','dragon')
         
-        elif spell_select == 'blizzard' and p.mp >= p.lvl*30/p.lvl:
-            spellblizzard.cast(p, e)
-            print(f'You casted a {spellblizzard.name}! It did {str(spellblizzard.dmg)} DMG and the {e.name} is frozen now!')    
-                
-        else:
-            print('You dont have enough MP!')
-    # end PLAYER CONTROL FUNCTIONS #
+        if self.field == 'visited':
+            self.text_textfield += 'This place seems familiar...\n'
 
-    while True:
-        
-        lvlup = p.lvl_up()
-        if lvlup:
-            print(lvlup)
-            
-        mode = 'explore'      # explore, fight, riddle, itemcrate
-        # ######### EXPLORE MODE ######### #
-        while mode == 'explore':
-            # ######### EXPLORE MODE PLAYER MOVES ######### #
-            moves = ('go north', 'go east', 'go south', 'go west',
-                    'quit', 'show stats', 'show inventory', 'show hp',
-                    'use healthpotion', 'use manapotion', 'use xppotion'
-                    'equip', 'unequip')
+        elif self.field == 'empty':
+            self.text_textfield += 'There is nothing special here...\n'
 
-            move = str(input('\n What do you want to do? \n'
-                                'go north, go east, go south, go west,\n'
-                                'show stats, show inventory,\n'
-                                'use healthpotion, use manapotion, use xppotion,\n'
-                                'equip, unequip, quit\n->'))
-            
-            if move == 'go north':
-                exec = p.move_north()
-                if exec:
-                    pass
-                if not exec:
-                    print('There are huge Mountains that you cannot pass!')
-            if move == 'go east':
-                exec = p.move_east()
-                if exec:
-                    pass
-                if not exec:
-                    print('You see a huge cliff. Jumping of it is no option!')
-            if move == 'go south':
-                exec = p.move_south()
-                if exec:
-                    pass
-                if not exec:
-                    print('You see a big ocean. There is certainly no way past this!')
-            if move == 'go west':
-                exec = p.move_west()
-                if exec:
-                    pass
-                if not exec:
-                    print('There is a thick jungle full of dangerous animals. Walking through there would certainly kill you!')
-            if move == 'quit':
-                print('You commit suicide!')
-                p.suicide()
-            if move == 'show stats':
-                p_showxp(p)        
-                p_showhp(p)        
-                p_showmp(p)
-            if move == 'use healthpotion':
-                use_healthpotion(p)
-            if move == 'use manapotion':
-                use_manapotion(p)      
-            if move == 'use xppotion':
-                use_xppotion(p)                   
-            if move == 'show inventory':
-                show_inventory(p)
-            if move == 'equip':
-                equip(p)
-                move = None
-            if move == 'unequip':
-                unequip(p)
-            if move not in moves and move != None:
-                print('You have no idea what you are doing...')
-            # end EXPLORE MODE PLAYER MOVES  #
+        elif self.field == 'heal':
+            text_heal = 'You feel much better now and also found a healthpotion!\n'
+            self.mode == 'explore'            
+            self.text_textfield += text_heal
+            p.hp = p.max_hp
+            p.inventory.append(healthpotion)
+            self.update_stats()
 
-            # ######### MAP FIELD CHECK AND EVENT ######### #
-            field = str(p.check_field())
-            if debug:
-                print('\n\n\n# ######### DEBUG BEGIN ######### #')
-                print('DEBUG field selection: '+str(field))
-                print('# ######### DEBUG END ######### #\n\n\n')
-                
-            if field == 'empty':
-                print('There is nothing special here...')
-                p.position_update()
-                p.print_map()
-                break
-
-            if field == 'visited':
-                print('This place seems familiar...')
-                p.position_update()
-                p.print_map()
-                break
-
-            if field == 'heal':
-                print('You feel much better now and also recieved a hp potion...')
-                p.hp = p.max_hp
-                p.inventory.append(healthpotion)
-                p.position_update()
-                p.print_map()
-                break
-
-            if field == 'goblin':
-                print('You see a Goblin crawling out of a hole on the ground. '
-                        'It watches you for a few seconds and then starts to attack you!')
-                e = EnemyGoblin(p)
-                mode = 'fight'
-                break
-
-            if field == 'dwarf':
-                print('You see a Dwarf fetching his axe while walking towards you... He jumps towards you and attacks!')
+        elif self.field in enemies:                        
+            if self.field == 'dwarf':
+                text_dwarf = 'You see a Dwarf fetching his axe while walking towards you... He jumps towards you and attacks!\n'
+                self.text_textfield = text_dwarf
                 e = EnemyDwarf(p)
-                mode = 'fight'
-                break
 
-            if field == 'ork':
-                choices = ('ork','ork general')
-                choose = choice(choices)    
-                if choose == 'ork':
-                    print('You see a Ork agressively walking towards you... It immediately attacks you!')
-                    e = EnemyOrk(p)
-                if choose == 'ork general':
-                    print('You see a Ork agressively walking towards you. It kinda looks fancy... It immediately attacks you!')
-                    e = EnemyOrkGeneral(p)
-                mode = 'fight'            
-                break
+            elif self.field == 'goblin':
+                text_goblin = ('You see a Goblin crawling out of a hole on the ground. '
+                        'He watches you for a few seconds and then starts to attack you!\n')
+                self.text_textfield = text_goblin
+                e = EnemyGoblin(p)
 
-            if field == 'troll':
-                print('You see a Troll stomping on the ground... It spotted you and looks like it wants to fight!')
+            elif self.field == 'ork':
+                text_ork = 'You see a Ork agressively walking towards you... He immediately attacks you!\n'
+                self.text_textfield = text_ork
+                e = EnemyOrk(p)
+
+            elif self.field == 'ork_general':
+                text_ork_general = 'You see a Ork agressively walking towards you. It kinda looks fancy... It immediately attacks you!\n'
+                self.text_textfield = text_ork_general
+                e = EnemyOrkGeneral(p)
+
+            elif self.field == 'troll':
+                text_troll = 'You see a Troll stomping on the ground... It spotted you and looks like it wants to fight!\n'
+                self.text_textfield = text_troll
                 e = EnemyTroll(p)
-                mode = 'fight'
-                break     
 
-            if field == 'dragon':
-                print('A huge Dragon appears in front of you! This will be a hard fight!')
+            elif self.field == 'dragon':
+                text_dragon = 'A huge Dragon appears in front of you! This will be a hard fight!\n'
+                self.text_textfield = text_dragon
                 e = EnemyDragon(p)
-                mode = 'fight'
+
+            self.mode = 'fight'
+            self.text_textfield += 'The fight begins! What do you want to do?\n'
+        else:
+            self.mode = 'explore'
+
+        if self.mode == 'explore':
+            p.map_to_string()
+            self.text_map = p.map_string
+            self.explore_buttons_active = True
+            self.fight_buttons_active = False
+
+        elif self.mode == 'fight':
+            choices_begin = ('player', 'enemy')
+            begin = choice(choices_begin)
+            if begin == 'enemy':
+                self.update_fight()
             else:
-                mode = 'explore'
+                text_enemy_hp = str(e.name)+' HP: '+str(e.hp)+' \n'
+                self.text_map = text_enemy_hp
+            self.explore_buttons_active = False
+            self.fight_buttons_active = True
 
-            if debug:
-                print('\n\n\n# ######### DEBUG BEGIN ######### #')
-                print('DEBUG check_field function: '+str(p.check_field()))
-                print('DEBUG player coordinates x:y: '+str(p.player_pos_x)+' : '+str(p.player_pos_y))            
-                print('DEBUG state of player coordinates: '+str(p.map[p.player_pos_y][p.player_pos_x]))
-                print('DEBUG mode variable: '+str(mode))
-                print('# ######### DEBUG END ######### #\n\n\n')
-            
+        p.position_update()
+        if self.textfield_counter == 11:
+            self.text_textfield = ''
+            self.textfield_counter = 0  
+   
+    def update_fight(self):
+        self.update_stats()                
+        text_enemy_hp = str(e.name)+' HP: '+str(e.hp)+' \n'
+        self.text_map = text_enemy_hp
+        if self.textfield_counter == 11:
+            self.text_textfield = ''
+            self.textfield_counter = 0  
+        self.enemy_turn()
+        if e.hp <= 0:
+            text_fightwin = 'You killed the '+e.name+' and got '+str(e.xp_bonus)+'XP!\nLoot Recieved:\n'
+            for i in e.inventory:
+                p.inventory.append(i)
+            for i in e.inventory:
+                text_fightwin += i.name+'\n'
+            self.text_textfield += text_fightwin
+            p.xp = p.xp + e.xp_bonus            
             p.position_update()
-            p.print_map()
-            # end MAP FIELD CHECK AND EVENT #
-        # end EXPLORE MODE #
+            self.mode = 'explore'
+            self.update_map()
 
-        # ######### FIGHT MODE ######### # 
-        if mode == 'fight':
-            print('\n############ the fight starts! ############\n')
-        while mode == 'fight':
-            p_showhp(p)
-            p_showmp(p)
-            e_showhp(e)        
-                        
-            # ######### EFFECTS AND MOVE SELECTION ######### #
-            e_move_choices = ['attack', 'defend']
-            if e.name == 'Dragon':
-                e_move_choices = ['attack','defend','fireball']                    
-                text_choices = ('The Dragon screams: YOU WILL DIE!', 'Dragon screams: I WILL BURN YOU ALIVE!', 'Dragon screams: I WILL EAT YOUR FLESH!')
-                text = choice(text_choices)        
-                print(text)   
-            
-            if p.active_effect == 'fire':            #for bossfight
-                dmg = 10
-                p.hp -= dmg
-                print(f'You are burning and recieved {str(dmg)} additional DMG!')
-                p_effectcounter += 1
-                if p_effectcounter == 3:
-                    p.active_effect == None
-                    p_effectcounter = 0
+    def enemy_turn(self):
+        move_choices = ('attack', 'defend')
+        move = choice(move_choices)
+        
+        if move == 'defend':
+            e.defend()
+            self.text_textfield += 'The '+e.name+' defends!\n'
+            self.textfield_counter += 1
+        if move == 'attack':
+            e.attack(e,p)
+            self.text_textfield += 'The '+e.name+' attacks you for '+str(e.attack_damage)+'DMG!\n'
+            self.textfield_counter += 1
 
-            if e.active_effect == 'fire':            
-                print(f'The {e.name}  is burning and recieved {str(spellfireball.effect_dmg)} additional DMG!')
-                e.hp -= spellfireball.effect_dmg
-                e_effectcounter += 1
-                if e_effectcounter == 3:                
-                    e_effectcounter = 0
-                    e.active_effect = 'none'
+    def go_north(self):        
+        p.move_north()
+        self.update_map() 
+  
+    def go_south(self):       
+        p.move_south()
+        self.update_map()
+  
+    def go_west(self):               
+        p.move_west()
+        self.update_map()
+  
+    def go_east(self):             
+        p.move_east()
+        self.update_map()
+  
+    def attack(self):
+        text = 'You attacked the '+str(e.name)+' for '+str(p.attack_damage)+'DMG!\n'
+        self.text_textfield += text
+        self.textfield_counter += 1
+        self.update_fight()
+        p.attack(p,e)
+  
+    def defend(self):
+        self.text_textfield += 'You defend!\n'
+        p.defend()
 
-            elif e.active_effect == 'ice':
-                e_choice = 'frozen'
-                print(f'The {e.name} is frozen and can\'t do anything')
-                e_effectcounter += 1
-                if e_effectcounter == 2:                
-                    e_effectcounter = 0
-                    e.active_effect = 'none'
-            else:          
-                e_choice = choice(e_move_choices)                        
-            # end ENEMY EFFECTS AND MOVE SELECTION #
-            if debug:
-                print(f'DEBUG p.active_effect:{p.active_effect}')
-                print(f'DEBUG p_effectcounter:{p_effectcounter}')
-                print(f'DEBUG e.active_effect:{e.active_effect}')
-                print(f'DEBUG e_effectcounter:{e_effectcounter}')
+    def cast_spell(self):
+        pass
+
+    def run_away(self):
+        pass
+
+    def equip(self):
+        pass
+    
+    def unequip(self):
+        pass
+
+    def use(self):
+        pass
 
 
-            # ######### PLAYER MOVE SELECTION ######### #
-            moves = ('attack', 'defend', 'cast spell', 'use manapotion', 'use healthpotion', 'run away')
+class TextRPG_kivygui(App):
+    pass
 
-            move = input('\nWhat do you want to do? \nattack, defend, cast spell,\n'
-                        'use manapotion, use healthpotion, run away:\n->')
-
-            while move not in moves:  # Input validation
-                move = input('Invalid Move! Try: \nattack, defend, cast spell,\n'
-                        'use manapotion, use healthpotion, run away:\n->')
-            
-            if move == 'use manapotion':
-                use_manapotion(p)
-            if move == 'use healthpotion':
-                use_healthpotion(p)          
-
-            if move == 'cast spell':
-                if e_choice == 'defend':
-                    e.defend()
-                    print(f'The {e.name} is defending!')
-                        
-                if e_choice == 'attack':
-                    e.attack(e, p)
-                    print(f'The {e.name} attacks you for {str(e.attack_damage)} DMG!')   
-
-                cast_spell(p, e)           
-                
-
-            if move == 'run away':
-                success = p.run_away(e)
-                if success:
-                    print(f'You successfully escaped the {e.name}!')
-                    mode = 'explore'
-                    p.position_update()
-                    p.print_map()
-                    break
-                if not success:
-                    print(f'You tried to run away, but the {e.name} is faster than you. The fight continues')
-                    mode = 'fight'
-                    e.attack(e, p)     
-
-            if move == 'attack':
-                if e_choice == 'defend':
-                    e.defend()
-                    print(f'The {e.name} is defending!')
-
-                p.attack(p, e)
-
-                print(f'You attack the {str(e.name)} for {str(p.attack_damage)} DMG!')
-            # end PLAYER MOVE SELECTION #
-
-            # ######### ENEMY DEATH ######### #
-            if e.hp <= 0:
-                print(f'You killed the {str(e.name)} and got {str(e.xp_bonus)} XP!')            
-                print('Loot recieved: ')
-                for i in e.inventory:
-                    print(i.name)     
-                if e.name == 'Dragon':
-                    print('\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n'
-                        'Congratulations!!!\n'
-                        'You finished the game!!!\n'                      
-                        'You are free to explore the rest of the world and recieved a new spell and some items!\n'
-                        'TextRPG created by: Alexander \'aTTaX\' Müller\n\n\n')
-                    p.map[p.boss_y][p.boss_x] = colored('X', 'blue')
-                    p.spells.append('blizzard')
-                    sleep(5)
-                    
-                for i in e.inventory:
-                    p.inventory.append(i)
-                p.xp = p.xp + e.xp_bonus            
-                p.position_update()
-                p.print_map()
-                mode = 'explore'
-                break
-            # end ENEMY DEATH #
-
-            if debug:
-                print('\n\n\n# ######### DEBUG BEGIN ######### #')
-                print(f'DEBUG player action: {str(p.action)}')
-                print(f'DEBUG enemy action: {str(e.action)}')
-                print('# ######### DEBUG END ######### #\n\n\n')
-            # ######### ENEMY ATTACK ######### #
-            if e_choice == 'attack':
-                if move == 'defend':
-                    p.defend()
-                    print('You are defending!')
-                e.attack(e, p)
-                print(f'The {e.name} attacks you for {str(e.attack_damage)} DMG!')
-                
-            if e_choice == 'fireball':
-                if move == 'defend':
-                    p.defend()
-                    print('You are defending!')
-                spellfireball.cast(e,p)
-                print(f'The {e.name} casts a fireball on you for {str(spellfireball.dmg)} DMG!')
-            # end ENEMY ATTACK #
-
-            # ######### PLAYER DEATH ######### #        
-            if p.hp <= 0:
-                print(f'You were killed by the {e.name}! Rest in peace...')
-                p.death()
-            # end PLAYER DEATH #
-        # end FIGHT MODE #  
-
+if __name__ == '__main__':
+    TextRPG_kivygui().run()

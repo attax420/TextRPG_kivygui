@@ -192,10 +192,11 @@ class Player(Character, GameMap):
 
     def unequip(self, item):
         if self.weapon != None and item == self.weapon:
+            self.attack_damage -= self.dmg_bonus
             self.dmg_bonus = 0            
             self.inventory.append(item)            
             self.weapon = None
-            self.update_dmg()
+            
             return True
         else:
             return False
@@ -394,6 +395,7 @@ class Item:
         self.name = None
         self.worth = 0
         self.usable = False
+        self.equippable = False
         self.weight = 0
 
 
@@ -447,6 +449,7 @@ class Weapon(Item):
         Item.__init__(self)
         self.dmg_bonus = None
         self.usable = False
+        self.equippable = True
 
 class WeaponBronzeSword(Weapon):
     def __init__(self):
@@ -454,13 +457,13 @@ class WeaponBronzeSword(Weapon):
         self.name = 'Bronze Sword'
         self.dmg_bonus = 10
 
-class WeaponSteelSword():
+class WeaponSteelSword(Weapon):
     def __init__(self):
         Weapon.__init__(self)
         self.name = 'Steel Sword'
         self.dmg_bonus = 40
 
-class WeaponDiamondSword():
+class WeaponDiamondSword(Weapon):
     def __init__(self):
         Weapon.__init__(self)
         self.name = 'Diamond Sword'
@@ -528,3 +531,4 @@ spelllist = [spellfireball, spellblizzard]
 # end OBJECTS #
 
 p.spells.append(spellfireball)
+p.inventory.append(sword_bronze)

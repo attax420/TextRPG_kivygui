@@ -136,12 +136,15 @@
             size: "60dp","60dp"        
             size_hint: None,None
             disabled: not root.explore_buttons_active
+            on_press: root.equip()
+
 
         Button:
             text: "unequip\ngear"
             size: "60dp","60dp"        
             size_hint: None,None
             disabled: not root.explore_buttons_active
+            on_press: root.unequip()
 
         Label:
             size: "60dp","60dp"        
@@ -171,5 +174,6 @@
             size: "60dp","60dp"        
             size_hint: None,None
             disabled: not root.fight_buttons_active
+            on_press: root.run_away()
 
 MainWindow:

@@ -86,6 +86,9 @@ class MainWindow(BoxLayout):
 
 
     def update_stats(self):
+        weapon_name = 'None'
+        if hasattr(p.weapon, 'name'):
+            weapon_name = p.weapon.name
         lvl_check = str(p.lvl_up())
         if lvl_check != 'False':
             self.text_textfield += lvl_check+'\n'
@@ -93,17 +96,18 @@ class MainWindow(BoxLayout):
                            f"MP: {p.mp}/{p.max_mp}\n"
                            f"DMG: {p.attack_damage}\n"
                            f"XP: {p.xp}\n"
-                           f"LVL: {p.lvl}\n")
+                           f"LVL: {p.lvl}\n"
+                           f"Equipped weapon: {weapon_name}\n")
         self.text_stats = text
         
     def update_map(self):
         global e
+        self.textfield_counter += 1
         if self.textfield_counter == 11:
             self.text_textfield = ''
             self.textfield_counter = 0  
 
-        self.update_stats()
-        self.textfield_counter += 1              
+        self.update_stats()                      
         p.map_to_string()
         self.field = p.check_field()
         p.position_update()
@@ -183,7 +187,8 @@ class MainWindow(BoxLayout):
 
         p.position_update()
    
-    def update_fight(self):        
+    def update_fight(self):    
+        self.textfield_counter += 1    
         if self.textfield_counter == 11:
             self.text_textfield = ''
             self.textfield_counter = 0 
@@ -199,8 +204,11 @@ class MainWindow(BoxLayout):
             e.hp -= p.lvl*5
             self.text_textfield += 'The enemy is burning and recieved '+str(p.lvl*5)+' additional DMG!\n'            
         
-        if e.hp > 0:
+        if e.hp > 0 and e.active_effect != 'ice':
             self.enemy_turn()
+
+        else:
+            self.text_textfield += 'The '+str(e.name)+' is frozen and cant do anything!\n'
 
         if p.hp <=0:
             self.text_textfield += 'The '+e.name+' killed you!\n GAME OVER!\n'   
@@ -227,6 +235,7 @@ class MainWindow(BoxLayout):
             p.position_update()            
             self.mode = 'explore'
             self.update_map()
+            self.spinner_spells_update()
             self.spinner_items_update()
 
     def enemy_turn(self):
@@ -281,22 +290,42 @@ class MainWindow(BoxLayout):
                 self.text_textfield += 'You dont have enough MP!\n'
         else:
             self.text_textfield += 'Select a spell first!\n'
+  
     def run_away(self):
-        pass
-
-    def equip(self):
-        pass
-    
-    def unequip(self):
-        pass
-
-    def use_item(self):
-        if self.mode == 'explore':
+        choices = (True, False)
+        choose = choice(choices)
+        if choose: 
+            self.text_textfield += 'You successfully ran away!\n'
+            self.mode = 'explore'
             self.update_map()
-        else: 
+        else:
+            self.text_textfield += 'You failed to run away!\n'
             self.update_fight()
-        print(p.inventory)
-        print(self.selected_item_obj)        
+            
+    def equip(self):  
+        self.spinner_items_text = 'click to select item'      
+        self.textfield_counter += 1
+        if p.equip(self.selected_item_obj):
+            self.text_textfield += 'You equipped the '+self.selected_item_obj.name+'!\n'
+        else:
+            self.text_textfield += 'You cant equip this item!\n'
+        self.spinner_items_update()
+        self.update_stats()
+
+    def unequip(self):
+        weapon_name = 'None'
+        if hasattr(p.weapon, 'name'):
+            weapon_name = p.weapon.name
+        self.textfield_counter += 1
+        if p.unequip(p.weapon):
+            self.text_textfield += 'You unequipped the '+weapon_name+'!\n'
+        else:
+            self.text_textfield += 'You cant unequip this item!\n'
+        self.spinner_items_update()
+        self.update_stats()
+
+    def use_item(self):     
+       
         self.spinner_items_text = 'click to select item'
         if self.selected_item_obj in p.inventory and self.selected_item_obj.usable:            
             self.selected_item_obj.use(p)
@@ -315,11 +344,16 @@ class MainWindow(BoxLayout):
             self.text_textfield += 'You cant use this item!\n'
             
         self.selected_item_obj = None
+
+        if self.mode == 'explore':
+            self.update_map()
+        else: 
+            self.update_fight()
+
         self.spinner_items_update()
         self.update_stats()
 
-        
-        
+       
 
 class TextRPG(App):
     def build(self):

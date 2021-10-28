@@ -1,22 +1,14 @@
-MainWindow:
 
-<BackgroundColor@Widget>:
-    background_color: 1,1,1,1
-    canvas.before:
-        Color:
-            rgba: root.background_color
-        Rectangle:
-            size: self.size
-            pos: self.pos
 
-<BackgroundLabel@Label+BackgroundColor>:
-    background_color: 0, 0, 0, 0 
-            
+<SpinnerOption>:
+    size_hint: None, None
+    size: "180dp", "30dp"
+
 <MainWindow>:
     orientation: "vertical"
+
     BoxLayout:
         orientation:"horizontal"
-
        
         Label:            
             text: root.text_textfield
@@ -34,9 +26,6 @@ MainWindow:
             size_hint: 1, 1
             font_name: "fonts/monospace.medium.ttf"
         
-
-
-
         BoxLayout:
             orientation:"vertical"
             size_hint: .5, 1
@@ -48,18 +37,6 @@ MainWindow:
                 valign: "top"
                 size_hint: 1, .3
                 font_size: "12sp"
-
-            ScrollView:
-                size_hint: 1, .7
-                scroll_distance: 100
-                 
-                Label:                      
-                    text: "Placeholder Inventory\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST\nTEST"
-                    size_hint: None, None     
-                    size: self.texture_size
-                    font_size: "12sp"
-                    
-
 
     BoxLayout:
         orientation: "horizontal"
@@ -81,11 +58,46 @@ MainWindow:
             size: "60dp","60dp"        
             size_hint: None,None
 
+        Label:
+            size: "60dp","60dp"        
+            size_hint: None,None
+
+        Spinner:
+            id: spinner_items
+            text: root.spinner_items_text
+            size: "180dp","60dp"        
+            size_hint: None,.5
+            values: root.inventory_items
+            on_text: root.spinner_items_clicked(spinner_items.text)
+            disabled: False
+
+        Label:
+            size: "60dp","60dp"        
+            size_hint: None,None
+
+        Label:
+            size: "60dp","60dp"        
+            size_hint: None,None
+
+        Label:
+            size: "60dp","60dp"        
+            size_hint: None,None
+
+        Spinner:
+            id: spinner_spells
+            text: root.spinner_spells_text
+            size: "180dp","60dp"        
+            size_hint: None,.5
+            values: root.spells_items
+            on_text: root.spinner_spells_clicked(spinner_spells.text)
+            disabled: False
+
     BoxLayout:
         orientation: "horizontal"
         size: "180dp","60dp"
             #pos: "0dp","60dp"
         size_hint: None,None
+
         Button:
             text: "go\nwest"
             size: "60dp","60dp"
@@ -112,9 +124,12 @@ MainWindow:
             size_hint: None,None
 
         Button:
+            id: button_use_item
             text: "use\nitem"
             size: "60dp","60dp"        
             size_hint: None,None
+            on_press: root.use_item()
+            disabled: False
 
         Button:
             text: "equip\ngear"
@@ -143,15 +158,18 @@ MainWindow:
             size: "60dp","60dp"        
             size_hint: None,None
             disabled: not root.fight_buttons_active
+            on_press: root.defend()
 
         Button:
             text: 'cast\nspell'
             size: "60dp","60dp"        
             size_hint: None,None
             disabled: not root.fight_buttons_active
-        
+            on_press: root.cast_spell()
         Button:
             text: "run\naway"
             size: "60dp","60dp"        
             size_hint: None,None
             disabled: not root.fight_buttons_active
+
+MainWindow:

@@ -4,12 +4,20 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.widget import Widget
 from kivy.uix.scrollview import ScrollView
-from kivy.properties import StringProperty, BooleanProperty
+from kivy.uix.dropdown import DropDown
+from kivy.uix.spinner import Spinner
+from kivy.clock import Clock
+from kivy.properties import StringProperty, BooleanProperty, ListProperty
 from classes import *
+from kivy.lang import Builder
+from kivy.resources import resource_add_path, resource_find
 
 p.randomize_map()
 p.position_update()
- 
+p.inventory.append(healthpotion)
+p.inventory.append(manapotion)
+
+
 
 class MainWindow(BoxLayout):        
     p.map_to_string()
@@ -18,7 +26,11 @@ class MainWindow(BoxLayout):
     text_stats = StringProperty('')
     explore_buttons_active = BooleanProperty(True)
     fight_buttons_active = BooleanProperty(False)
-    
+    inventory_items = ListProperty([i.name for i in p.inventory])
+    spells_items = ListProperty([i.name for i in p.spells])
+    spinner_items_text = StringProperty()
+    spinner_spells_text = StringProperty()
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs) 
         self.field = 'empty'
@@ -27,8 +39,56 @@ class MainWindow(BoxLayout):
         self.map_x = p.map_x
         self.textfield_counter = 0
         self.update_stats()
-      
+        self.spinner_items_update()
+        self.selected_item_str = ''
+        self.selected_item_obj = None   
+        self.selected_spell_str = ''
+        self.selected_spell_obj = None     
+        self.spinner_items_text = 'click to select item'
+        self.spinner_spells_text = 'click to select spell'
+
+    def spinner_items_clicked(self,value):
+        self.spinner_items_text = value
+        self.selected_item_str = value
+        if self.selected_item_str == 'Diamond Sword':
+            self.selected_item_obj = sword_diamond
+        elif self.selected_item_str == 'Steel Sword':
+            self.selected_item_obj = sword_steel
+        elif self.selected_item_str == 'Bronze Sword':
+            self.selected_item_obj = sword_bronze
+        elif self.selected_item_str == 'HP Potion':
+            self.selected_item_obj = healthpotion
+        elif self.selected_item_str == 'MP Potion':
+            self.selected_item_obj = manapotion
+        elif self.selected_item_str == 'XP Potion':
+            self.selected_item_obj = xppotion
+        print(self.selected_item_obj)
+        self.spinner_items_update()
+
+    def spinner_items_update(self):        
+        self.inventory_items = [i.name for i in p.inventory]
+        self.inventory_items.sort()
+
+    def spinner_spells_clicked(self,value):
+        self.spinner_spells_text = value
+        self.selected_spell_str = value
+        if self.selected_spell_str == 'Fireball':
+            self.selected_spell_obj = spellfireball
+        elif self.selected_spell_str == 'Blizzard':
+            self.selected_spell_obj = spellblizzard
+
+        print(self.selected_spell_obj)
+        self.spinner_spells_update()
+
+    def spinner_spells_update(self):        
+        self.spells_items = [i.name for i in p.spells]
+        self.spells_items.sort()
+
+
     def update_stats(self):
+        lvl_check = str(p.lvl_up())
+        if lvl_check != 'False':
+            self.text_textfield += lvl_check+'\n'
         text = str(f"STATS:\nHP: {p.hp}/{p.max_hp}\n"
                            f"MP: {p.mp}/{p.max_mp}\n"
                            f"DMG: {p.attack_damage}\n"
@@ -38,6 +98,9 @@ class MainWindow(BoxLayout):
         
     def update_map(self):
         global e
+        if self.textfield_counter == 11:
+            self.text_textfield = ''
+            self.textfield_counter = 0  
 
         self.update_stats()
         self.textfield_counter += 1              
@@ -45,7 +108,7 @@ class MainWindow(BoxLayout):
         self.field = p.check_field()
         p.position_update()
         self.text_map = p.map_string  
-
+        
         enemies = ('dwarf','goblin','ork','ork_general','troll','dragon')
         
         if self.field == 'visited':
@@ -59,7 +122,9 @@ class MainWindow(BoxLayout):
             self.mode == 'explore'            
             self.text_textfield += text_heal
             p.hp = p.max_hp
+            p.mp = p.max_mp
             p.inventory.append(healthpotion)
+            self.spinner_items_update()
             self.update_stats()
 
         elif self.field in enemies:                        
@@ -117,29 +182,52 @@ class MainWindow(BoxLayout):
             self.fight_buttons_active = True
 
         p.position_update()
+   
+    def update_fight(self):        
         if self.textfield_counter == 11:
             self.text_textfield = ''
-            self.textfield_counter = 0  
-   
-    def update_fight(self):
+            self.textfield_counter = 0 
+
+
         self.update_stats()                
         text_enemy_hp = str(e.name)+' HP: '+str(e.hp)+' \n'
         self.text_map = text_enemy_hp
-        if self.textfield_counter == 11:
-            self.text_textfield = ''
-            self.textfield_counter = 0  
-        self.enemy_turn()
+        
+
+        # STATUSEFFECTS
+        if e.active_effect == 'fire':
+            e.hp -= p.lvl*5
+            self.text_textfield += 'The enemy is burning and recieved '+str(p.lvl*5)+' additional DMG!\n'            
+        
+        if e.hp > 0:
+            self.enemy_turn()
+
+        if p.hp <=0:
+            self.text_textfield += 'The '+e.name+' killed you!\n GAME OVER!\n'   
+            self.text_map = 'YOU ARE DEAD! GAME OVER!'
+            self.fight_buttons_active = False
+            self.explore_buttons_active = False
+            self.ids.button_use_item.disabled = True
+            self.ids.spinner_items.disabled = True
+            
+
         if e.hp <= 0:
-            text_fightwin = 'You killed the '+e.name+' and got '+str(e.xp_bonus)+'XP!\nLoot Recieved:\n'
+            if e.name == 'Dragon':
+                self.text_textfield = ''
+                text_fightwin = 'You defeated the Dragon and won the Game!\nFeel free to explore the rest of the World!\nYou recieved the Blizzard spell!\n\n\nTextRPG Kivy Edition created by:\n Alexander "aTTaX" Müller\n\nLoot recieved:\n'
+                p.spells.append(spellblizzard)
+            else:
+                text_fightwin = 'You killed the '+e.name+' and got '+str(e.xp_bonus)+'XP!\nLoot Recieved:\n'
             for i in e.inventory:
                 p.inventory.append(i)
             for i in e.inventory:
                 text_fightwin += i.name+'\n'
             self.text_textfield += text_fightwin
             p.xp = p.xp + e.xp_bonus            
-            p.position_update()
+            p.position_update()            
             self.mode = 'explore'
             self.update_map()
+            self.spinner_items_update()
 
     def enemy_turn(self):
         move_choices = ('attack', 'defend')
@@ -151,8 +239,9 @@ class MainWindow(BoxLayout):
             self.textfield_counter += 1
         if move == 'attack':
             e.attack(e,p)
-            self.text_textfield += 'The '+e.name+' attacks you for '+str(e.attack_damage)+'DMG!\n'
+            self.text_textfield += 'The '+e.name+' attacks you for '+str(round(e.attack_damage))+'DMG!\n'
             self.textfield_counter += 1
+            self.update_stats()
 
     def go_north(self):        
         p.move_north()
@@ -171,19 +260,27 @@ class MainWindow(BoxLayout):
         self.update_map()
   
     def attack(self):
-        text = 'You attacked the '+str(e.name)+' for '+str(p.attack_damage)+'DMG!\n'
+        text = 'You attacked the '+str(e.name)+' for '+str(round(p.attack_damage))+'DMG!\n'
         self.text_textfield += text
         self.textfield_counter += 1
-        self.update_fight()
         p.attack(p,e)
-  
+        self.update_fight()
+          
     def defend(self):
         self.text_textfield += 'You defend!\n'
         p.defend()
+        self.update_fight()
 
     def cast_spell(self):
-        pass
-
+        if self.selected_spell_obj in p.spells:
+            if p.mp >= self.selected_spell_obj.mana_usage:
+                self.text_textfield += 'You casted a '+self.selected_spell_obj.name+' this caused '+str(self.selected_spell_obj.dmg)+'DMG and the enemy has now the "'+self.selected_spell_obj.effect+'" statuseffect!\n '
+                self.selected_spell_obj.cast(p, e)
+                self.update_fight()
+            else:
+                self.text_textfield += 'You dont have enough MP!\n'
+        else:
+            self.text_textfield += 'Select a spell first!\n'
     def run_away(self):
         pass
 
@@ -193,12 +290,44 @@ class MainWindow(BoxLayout):
     def unequip(self):
         pass
 
-    def use(self):
-        pass
+    def use_item(self):
+        if self.mode == 'explore':
+            self.update_map()
+        else: 
+            self.update_fight()
+        print(p.inventory)
+        print(self.selected_item_obj)        
+        self.spinner_items_text = 'click to select item'
+        if self.selected_item_obj in p.inventory and self.selected_item_obj.usable:            
+            self.selected_item_obj.use(p)
+            p.inventory.remove(self.selected_item_obj)
+            if self.selected_item_obj.name == 'HP Potion':
+                self.text_textfield += 'You used a HP Potion!\n'
+            elif self.selected_item_obj.name == 'MP Potion':
+                self.text_textfield += 'You used a MP Potion!\n'
+            elif self.selected_item_obj.name == 'XP Potion':
+                self.text_textfield += 'You used a XP Potion!\n'            
 
+        elif self.selected_item_obj not in p.inventory:
+            self.text_textfield += 'You dont have this item!\n'
 
-class TextRPG_kivygui(App):
+        elif not self.selected_item_obj.usable:
+            self.text_textfield += 'You cant use this item!\n'
+            
+        self.selected_item_obj = None
+        self.spinner_items_update()
+        self.update_stats()
+
+        
+        
+
+class TextRPG(App):
+    def build(self):
+        Builder.load_file('textrpg_kivygui.kv')        
+        return MainWindow()
     pass
 
 if __name__ == '__main__':
-    TextRPG_kivygui().run()
+    if hasattr(sys, '_MEIPASS'):
+        resource_add_path(os.path.join(sys._MEIPASS))
+    TextRPG().run()

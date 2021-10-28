@@ -1,6 +1,6 @@
 from random import choice 
 from time import sleep
-import os
+import os, sys
 from platform import system
 
 if system().lower() == 'windows':
@@ -28,7 +28,7 @@ class GameMap:
         run = True        
         while run == True:
             if self.boss_x != self.player_pos_x or self.boss_y != self.player_pos_y:                
-                       self.map[self.player_pos_y][self.player_pos_x] = ('#')
+                       self.map[self.player_pos_y][self.player_pos_x] = ('█')
                        run = False
             else:
                 self.player_pos_x = int(choice(range(self.map_x -1)))
@@ -165,7 +165,7 @@ class Player(Character, GameMap):
         self.hp = self.max_hp
         self.mp = self.max_mp
         self.xp = 0
-        self.spell = []
+        self.spells = []
         self.inventory = []
         self.weapon = None
         self.gear = {'Head': 'none',
@@ -200,11 +200,8 @@ class Player(Character, GameMap):
         else:
             return False
 
-
-
-
     def use_item(self, item):
-        if not item.interactive:
+        if not item.usable:
                 return False, 'not usable'
         if item not in self.inventory:
             return False, 'not available'
@@ -214,8 +211,6 @@ class Player(Character, GameMap):
                 if v == item:
                     self.inventory.pop(i)
                     return True, 'success'
-
-
 
     def lvl_up(self):
         lvlup = False 
@@ -291,7 +286,7 @@ class Player(Character, GameMap):
                 self.xp -= 2400       
             else:
                 self.xp = 0
-            self.attack_damage = self.attack_damage * 2.7    
+            self.attack_damage = self.attack_damage * 2.7 
             lvlup = True      
         if self.xp >= 2800 and self.lvl < 8:
             self.lvl = 8            
@@ -300,36 +295,19 @@ class Player(Character, GameMap):
             self.max_mp += 300
             self.mp = self.max_mp
             self.xp = 0
-            self.attack_damage = self.attack_damage * 3 + self.dmg_bonus
+            self.attack_damage = self.attack_damage * 3 
             lvlup = True 
 
         
+        
         if lvlup:
+            spellfireball.dmg = round(p.lvl*0.6*30)
             if self.lvl == 8:
                 return('LVL up!!! You are now on LVL 8 which is the maximum LVL!')
             else:
                 return ('LVL up!!! You are now LVL ' + str(self.lvl) + '!')            
         else:
             return False
-
-    @staticmethod
-    def suicide():
-        sleep(2)
-        exit('exit by suicide...')
-
-    @staticmethod
-    def death():
-        sleep(2)
-        exit('exit by death...')
-
-    @staticmethod
-    def run_away(e):
-        mode_choices = ('explore', 'fight')
-        mode = choice(mode_choices)
-        if mode == 'fight':
-            return False
-        if mode == 'explore':
-            return True
 
 
 class Enemy(Character):
@@ -403,7 +381,7 @@ class EnemyDragon(Enemy):
         self.xp_bonus = 800
         self.name = 'Dragon'
         self.hp = 2000
-        self.inventory = [sword_diamond, manapotion, manapotion, healthpotion, spellfireball]
+        self.inventory = [sword_diamond, manapotion, manapotion, healthpotion]
         self.attack_damage = 30
         self.spell = [spellfireball]
    
@@ -415,9 +393,7 @@ class Item:
     def __init__(self):
         self.name = None
         self.worth = 0
-        self.interactive = True
-        self.can_use_in_fight = True
-        self.consumable = True
+        self.usable = False
         self.weight = 0
 
 
@@ -425,14 +401,14 @@ class Potion(Item):
     def __init__(self):
         Item.__init__(self)
         self.weight = 0.5
-
+        self.usable = True
 
 class PotionHP(Potion):
     def __init__(self):
         Potion.__init__(self)
         self.name = 'HP Potion'
         self.hp_bonus = 50
-
+        
     def use(self, p):
         p.hp = p.hp + self.hp_bonus
         if p.hp >= p.max_hp:
@@ -467,8 +443,10 @@ class PotionMP(Potion):
 
 
 class Weapon(Item):
-    dmg_bonus = None
-    pass
+    def __init__(self):
+        Item.__init__(self)
+        self.dmg_bonus = None
+        self.usable = False
 
 class WeaponBronzeSword(Weapon):
     def __init__(self):
@@ -513,8 +491,8 @@ class SpellFireball(Spell):
     def __init__(self):        
         Spell.__init__(self)
         self.name = 'Fireball'
-        self.dmg = p.lvl*50
-        self.mana_usage = p.lvl*20/p.lvl
+        self.dmg = 30
+        self.mana_usage = p.lvl*20/0.8
         self.effect_dmg = 5
         self.effect = 'fire'
 
@@ -549,4 +527,4 @@ spelllist = [spellfireball, spellblizzard]
 # end ITEMLISTS + SPELLLIST #
 # end OBJECTS #
 
-p.spell.append(spellfireball)
+p.spells.append(spellfireball)

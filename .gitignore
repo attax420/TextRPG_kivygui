@@ -1026,3 +1026,5 @@ gui_test.dist/tk/ttk/winTheme.tcl
 gui_test.dist/tk/ttk/xpTheme.tcl
 main copy.py
 notizen.txt
+buildozer.spec
+extras/buildozer/

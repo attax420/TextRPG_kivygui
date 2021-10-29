@@ -2,15 +2,12 @@ from kivy.app import App
 from kivy.uix.button import Button
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.gridlayout import GridLayout
-from kivy.uix.widget import Widget
-from kivy.uix.scrollview import ScrollView
 from kivy.uix.dropdown import DropDown
 from kivy.uix.spinner import Spinner
-from kivy.clock import Clock
 from kivy.properties import StringProperty, BooleanProperty, ListProperty
 from classes import *
 from kivy.lang import Builder
-from kivy.resources import resource_add_path, resource_find
+from kivy.resources import resource_add_path
 
 p.randomize_map()
 p.position_update()

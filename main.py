@@ -103,7 +103,7 @@ class MainWindow(BoxLayout):
     def update_map(self):
         global e
         self.textfield_counter += 1
-        if self.textfield_counter == 11:
+        if self.textfield_counter >= 11:
             self.text_textfield = ''
             self.textfield_counter = 0  
 
@@ -189,7 +189,7 @@ class MainWindow(BoxLayout):
    
     def update_fight(self):    
         self.textfield_counter += 1    
-        if self.textfield_counter == 11:
+        if self.textfield_counter >= 11:
             self.text_textfield = ''
             self.textfield_counter = 0 
 
